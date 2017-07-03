@@ -34,6 +34,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
+import javax.print.attribute.standard.Chromaticity;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -58,18 +59,21 @@ public final class PolicyFactory
   private final ImmutableSet<String> textContainers;
   private final HtmlStreamEventProcessor preprocessor;
   private final HtmlStreamEventProcessor postprocessor;
+  private Map<Character, String> encodingPolicies;
 
   PolicyFactory(
       ImmutableMap<String, ElementAndAttributePolicies> policies,
       ImmutableSet<String> textContainers,
       ImmutableMap<String, AttributePolicy> globalAttrPolicies,
       HtmlStreamEventProcessor preprocessor,
-      HtmlStreamEventProcessor postprocessor) {
+      HtmlStreamEventProcessor postprocessor,
+      Map<Character, String> encodingPolicies) {
     this.policies = policies;
     this.textContainers = textContainers;
     this.globalAttrPolicies = globalAttrPolicies;
     this.preprocessor = preprocessor;
     this.postprocessor = postprocessor;
+    this.encodingPolicies = encodingPolicies;
   }
 
   /** Produces a sanitizer that emits tokens to {@code out}. */
@@ -127,7 +131,7 @@ public final class PolicyFactory
     HtmlSanitizer.sanitize(
         html,
         apply(
-            HtmlStreamRenderer.create(out, Handler.DO_NOTHING),
+            HtmlStreamRenderer.create(out, Handler.DO_NOTHING, encodingPolicies),
             listener,
             context),
         preprocessor);
@@ -210,6 +214,6 @@ public final class PolicyFactory
             this.postprocessor, f.postprocessor);
     return new PolicyFactory(
         b.build(), allTextContainers, allGlobalAttrPolicies,
-        compositionOfPreprocessors, compositionOfPostprocessors);
+        compositionOfPreprocessors, compositionOfPostprocessors, encodingPolicies);
   }
 }
